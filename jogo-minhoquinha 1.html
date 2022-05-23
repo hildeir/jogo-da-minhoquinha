@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <canvas id="canvas" width="400" height="400">
+    </canvas>
+
+    <script>
+
+        let canva = document.querySelector("#canvas");
+        let ctx = canva.getContext("2d");
+
+        window.onload = inicia;
+
+        function inicia(){
+            //configuravel
+            let t_cobra = 10; //tamanho cobra width e height
+            let t_apple = 10; //tamanho maça width e height
+            let trail = 3; //tamanho inicial da cobra
+            let cobraX = 40; //posicao inicial
+            let cobraY = 100; //posical inicial
+            let espacoParteCobra = 0; 
+           
+            //fim 
+            var appleComida = false;
+            var posTrail = [];
+            let speed = 1;
+            let vx = 0;
+            let vy = 0;
+            //cordenada de cada pedaço da cobra
+            let cobraPosX = "";
+            let cobraPosY = "";
+            //cordenada cada posicao da maçã
+            let macaPosX = "";
+            let macaPosY = "";
+            //desenhando fundo preto
+            ctx.fillStyle = "black";         
+            ctx.fillRect(0,0,canva.width,canva.height);
+            //define o tamanho da cobra
+            for (let i = 0; i < trail; i++) {
+                let cor = geraCor();
+                posTrail.push({x:cobraX + ((t_cobra + espacoParteCobra) * i),y:cobraY,cor:cor,posArray:i});
+                
+            }
+            var maca = geraPosicaoMaca(); //gera a posicao da maça
+            var cabeca = []; //pega a cabeça da cobra, valor em objeto com valores x e y que sao a cordenada da cabeça
+            var cabecaX = "";
+            var cabecaY = "";
+            var macaX = "";
+            var macaY = "";
+            
+            
+            var iniciaGame = setInterval(game,30);
+
+            function game(){
+                //desenha o fundo preto
+                ctx.fillStyle = "black";         
+                ctx.fillRect(0,0,canva.width,canva.height);
+                //desenha a cobra
+                for(let i = 0; i < posTrail.length; i++){
+                    
+                    ctx.fillStyle = posTrail[i].cor;
+                    cobraPosX = posTrail[i].x;
+                    cobraPosY = parseInt(posTrail[i].y);
+                    ctx.fillRect(cobraPosX,cobraPosY,t_cobra, t_cobra);
+                }
+                
+                //desenha a maça
+                ctx.fillStyle = maca.cor;
+                macaPosX = maca.x;
+                macaPosY = maca.y;
+                ctx.fillRect(macaPosX, macaPosY, t_apple, t_apple);
+
+                
+                if(!isEmpty(cabeca)){
+                    cabecaX = cabeca.x + t_cobra + espacoParteCobra;
+                    cabecaY = cabeca.y + t_cobra + espacoParteCobra;
+
+                    macaX = maca.x + t_apple;
+                    macaY = maca.y + t_apple;
+                    
+                }
+                //quando comer a maça
+                if(cabecaX >= maca.x && cabeca.x <= macaX){
+                    if(cabecaY >= maca.y && cabeca.y <= macaY){
+                        adicionaParteCobra(maca.cor);
+                        appleComida = true;
+                        maca = geraPosicaoMaca();
+                        
+                    }
+                }
+                //quando a cobra colidir com o rabo
+                let detectorA = false;
+                let detectorB = false;
+                let detectorC = false;
+                let detectorD = false;
+                let detectorVerticalA = false;
+                let detectorVerticalB = false;
+                for (var i = 0; i < posTrail.length; i++) {
+        
+                    let cabecaPosArray = posTrail.length - 1;
+                    if(cabecaPosArray != i){
+                        var bottomRightX = posTrail[i].x + t_cobra + espacoParteCobra;
+                        var bottomRightY = posTrail[i].y + t_cobra + espacoParteCobra;
+
+                        var topRightX = posTrail[i].x + t_cobra + espacoParteCobra;
+                        var topRightY = posTrail[i].y;
+
+                        var topLeftX = posTrail[i].x;
+                        var topLeftY = posTrail[i].y;
+
+                        var bottomLeftY = posTrail[i].y + t_cobra + espacoParteCobra;
+                    }                
+                    ///horizontal colisao
+                    if(cabecaX == topLeftX && cabeca.y == topRightY){
+                        
+                        if(detectorA == false){
+                            detectorA = true;
+                        }
+
+                    }
+                    if(cabecaX == posTrail[i].x && cabecaY == bottomRightY){
+
+                        if(detectorB == false){
+                            detectorB = true;
+                        }
+                    }
+                    if(cabeca.x == topRightX && cabeca.y == posTrail[i].y){
+                        
+                        if(detectorC == false){
+                            detectorC = true;
+                        }
+                    }
+                    if(cabeca.x == topRightX && cabecaY == bottomRightY){
+                    
+                        if(detectorD == false){
+                            detectorD = true;
+                        }
+                    }
+                    
+                   
+                    
+                    // vertical colisao
+                    let pescoso = posTrail.length - 2;
+                    if(cabeca.x == posTrail[pescoso].x && cabeca.y != posTrail[pescoso].y){
+                        if(cabecaPosArray == i || pescoso == i){
+                            continue;
+                        }else{
+                            if(cabeca.x == posTrail[i].x && cabeca.y == bottomLeftY){
+                            
+                                detectorVerticalA = true;
+                            }
+                            if(cabecaX == topRightX && cabeca.y == bottomRightY){
+                                
+                                detectorVerticalB = true;
+                            }
+
+                        }
+                    }
+                    //colisao da cobra com o rabo, colide quando a cabeca esta ao lado
+                    //do rabo e vira em direcao ao rabo, quando acontece isso há uma colisao
+                    if(cabecaPosArray == i || pescoso == i){
+                        continue;
+                    }else{
+                        if(cabeca.x == posTrail[i].x && cabeca.y == posTrail[i].y){
+                            if(cabeca.x == posTrail[i].x && cabecaY == bottomRightY){
+                                gameOver();
+                                break;
+                            }
+                        } 
+                    }
+
+                    if(detectorA == true && detectorB == true && detectorC == true && detectorD == true){
+                        if(appleComida == false){
+                            gameOver();
+                            break;
+                        }
+                    }else if(detectorVerticalA == true && detectorVerticalB == true){
+                        if(appleComida == false){
+                            gameOver();
+                            break;
+                        }
+                        
+                    }
+
+                }
+            }
+            function gameOver(){
+                if(confirm("game over! jogar novamente?") == false){
+                    //termina o jogo
+                    clearInterval(iniciaGame);
+                }else{
+                    //jogar novamente
+                    location.reload();
+                    
+                }
+            }
+            function adicionaParteCobra(cormaca){
+    
+                let firstPos = posTrail[0]; 
+                let secondPos = posTrail[1];
+                //quando as duas partes inicias da cobra for na posição vertical
+                if(firstPos.x == secondPos.x){
+                    //adiciona parte da cobra
+                    posTrail.unshift({x:firstPos.x, y: firstPos.y + t_cobra + espacoParteCobra, cor:cormaca });
+
+                }else if(firstPos.y == secondPos.y){ //quando as duas partes inicias da cobra for na posição horizontal
+                    //adiciona parte da cobra
+                    posTrail.unshift({x:firstPos.x + t_cobra + espacoParteCobra, y: firstPos.y, cor:cormaca });
+                }
+            }
+            function geraPosicaoMaca(){
+                
+                let posX = Math.floor(Math.random() * (canva.width - t_apple));
+                let posY = Math.floor(Math.random() * (canva.height - t_apple));
+                //// cria uma cor para a maca
+                let cor = geraCor();
+                let posicao = {x:posX,y:posY,cor:cor};
+            
+                return posicao;
+            }
+            ///// gera uma cor ///////
+            function geraCor(){
+                var cor = "#";
+                let escolheLetraOuNumero = Math.floor(Math.random() * 2);
+                let letraCodigo = 0;
+                let numeroCodigo = 1;
+                for (var i = 0; i < 6; i++) {
+                    if(escolheLetraOuNumero == letraCodigo){ //letra
+                        cor += geraLetra();
+                    }else{ //numero
+                        cor += geraNumero()
+                    }
+                }
+                function geraNumero(){
+                    return Math.floor(Math.random() * 9);
+                }
+                function geraLetra(){
+                    let randomLetra = Math.floor(Math.random() * 5);
+                    switch(randomLetra){
+                        case 0:
+                            return "a";
+                            break;
+                        case 1:
+                            return "b";
+                            break;
+                        case 2:
+                            return "c";
+                            break;
+                        case 3:
+                            return "d";
+                            break;
+                        case 4:
+                            return "e";
+                            break;
+                        case 5:
+                            return "f";
+                            break;
+                    }
+                } 
+                let coresNaoPermitida = ["#000000","#0d0d0d","#1a1a1a","#262626","#333333","#404040","#4d4d4d","#595959"];
+                for (var i = 0; i < coresNaoPermitida.length; i++) {
+                    if(coresNaoPermitida[i] == cor){
+                        geraCor();
+                    }else{
+                        return cor;
+                    }
+                }
+            }
+            
+            function isEmpty(obj){
+                for(var prop in obj){
+                    if(obj.hasOwnProperty(prop)){
+                        return false;
+                    }
+                }
+                return true;
+            }
+            var down = false;
+            var up = false;
+            var left = false;
+            var right = false;
+            document.addEventListener("keydown",controle);
+            function controle(e){
+                //a ultima posicao do array do trail que é a cobra é a cabeca da cobra
+                let lastPos = posTrail[posTrail.length - 1]; //pega a ultima posicao 
+                
+                switch(e.keyCode){
+                    case 37: //left
+                        if(left == true){
+                            break;
+                        }else{
+                            vx += speed;
+                            let removido = posTrail.shift();
+                            posTrail.push({x:lastPos.x - (t_cobra + espacoParteCobra), y: lastPos.y, cor:removido.cor}); 
+                            cabeca = posTrail[posTrail.length - 1];
+                            down = false;
+                            up = false;
+                            right = true;
+                            break;
+                        }
+                        
+                    case 38: //up
+                        if(up == true){
+                            break;
+                        }else{
+                            vy += speed;
+                            let removido = posTrail.shift();
+                            posTrail.push({x:lastPos.x, y: lastPos.y - (t_cobra + espacoParteCobra),cor:removido.cor }); 
+                            cabeca = posTrail[posTrail.length - 1];
+                            down = true;
+                            left = false;
+                            right = false;
+                            break;
+                        }
+                        
+                        
+                    case 39: //right
+                        if(right == true){
+                            break;
+                        }else{
+                            vx += speed;
+                            let removido = posTrail.shift();
+                            posTrail.push({x:lastPos.x + t_cobra + espacoParteCobra, y: lastPos.y, cor: removido.cor}); 
+                            cabeca = posTrail[posTrail.length - 1];
+                            down = false;
+                            up = false;
+                            left = true;
+                            break;
+                        }
+                        
+                    
+                    case 40: //down
+                        if(down == true){
+                            break;
+                        }else{
+                            vy += speed;
+                            let removido = posTrail.shift();
+                            posTrail.push({x:lastPos.x, y: lastPos.y + t_cobra + espacoParteCobra, cor: removido.cor }); 
+                            cabeca = posTrail[posTrail.length - 1];
+                            up = true;
+                            left = false;
+                            right = false;
+                            break;
+                        }
+                        
+                }
+            }
+            
+            
+        }
+
+    </script>
+
+</body>
+
+</html>
